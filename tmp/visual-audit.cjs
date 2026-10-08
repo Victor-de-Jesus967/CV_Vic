@@ -15,6 +15,7 @@ const { setTimeout: delay } = require('timers/promises');
     const errors=[];
     page.on('pageerror',e=>errors.push(String(e)));
     const response=await page.goto('http://127.0.0.1:8765/'+path,{waitUntil:'networkidle'});
+    await page.evaluate(async () => { await Promise.all([...document.images].map(async img => { img.loading='eager'; if(img.complete) return; await Promise.race([new Promise(resolve => { img.addEventListener('load',resolve,{once:true}); img.addEventListener('error',resolve,{once:true}); }), new Promise(resolve => setTimeout(resolve,5000))]); })); });
     const data=await page.evaluate(()=>({width:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,imgs:[...document.images].filter(x=>!x.complete||x.naturalWidth===0).map(x=>x.src),title:document.title}));
     if(response.status()!==200) failures.push(path+': HTTP '+response.status());
     if(data.width>data.client+2) failures.push(path+': horizontal overflow '+data.width+'/'+data.client+' at '+viewport.width);
