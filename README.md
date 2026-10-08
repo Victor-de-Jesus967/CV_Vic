@@ -37,7 +37,7 @@ git remote add origin URL-DE-TU-REPOSITORIO
 git push -u origin main
 ```
 
-La configuración de `.gitignore` evita subir el ZIP, el material fuente, el CV original y los archivos temporales. Confirma con `git status` que solo se incluyan los archivos publicables.
+Antes de subir archivos revisa con `git status` que no haya datos privados ni artefactos temporales.
 
 ## Activar GitHub Pages
 
@@ -47,7 +47,7 @@ La configuración de `.gitignore` evita subir el ZIP, el material fuente, el CV 
 4. Selecciona la rama `main` y la carpeta `/ (root)`.
 5. Guarda y espera a que GitHub publique la URL.
 
-El archivo `.nojekyll` evita el procesamiento innecesario de Jekyll.
+Para este sitio HTML estático no se requiere compilación.
 
 ## Actualizar imágenes
 
@@ -55,16 +55,16 @@ El archivo `.nojekyll` evita el procesamiento innecesario de Jekyll.
 2. Copia la nueva imagen a la carpeta correspondiente dentro de `assets/projects/`.
 3. Usa nombres en minúsculas, descriptivos y con guiones.
 4. Actualiza la ruta, el texto alternativo, el ancho y el alto en el HTML.
-5. Registra el cambio en `ASSETS_MAP.md`.
+5. Documenta el origen y la licencia de los recursos gráficos cuando corresponda.
 6. Comprueba que la captura use información ficticia o sanitizada.
 
 ## Actualizar el CV
 
 Reemplaza `assets/documents/CV-Victor-Jimenez.pdf` manteniendo exactamente el mismo nombre. Antes de publicarlo, confirma que sea una versión pública sin teléfono visible, fotografía ni información sensible.
 
-## Agregar `victordejesus.dev` en el futuro
+## Dominio personalizado `victordejesus.dev`
 
-No existe un archivo `CNAME` en esta versión porque el dominio todavía no está configurado.
+El dominio `victordejesus.dev` ya está configurado en el archivo raíz `CNAME`.
 
 Cuando el dominio esté comprado y sus DNS apunten a GitHub Pages:
 
@@ -74,12 +74,12 @@ Cuando el dominio esté comprado y sus DNS apunten a GitHub Pages:
 4. Escribe `victordejesus.dev`, guarda y espera la verificación DNS.
 5. Activa **Enforce HTTPS** cuando GitHub lo permita.
 
-No agregues `CNAME` antes de que el dominio y los registros DNS estén listos.
+Mantén el archivo `CNAME` con el valor `victordejesus.dev` y verifica DNS y HTTPS desde GitHub Pages.
 
 ## Probar en celular
 
-Consulta `MOBILE_TESTING.md` para abrir el sitio desde un celular conectado a la misma red Wi-Fi y revisar los anchos objetivo.
+Abre el sitio desde el teléfono y comprueba navegación, imágenes, enlaces y distribución responsive.
 
 ## Publicación
 
-Sube los HTML, `assets/`, `proyectos/`, `docs/`, `.nojekyll`, `.gitignore`, `robots.txt`, `README.md`, `ASSETS_MAP.md` y `MOBILE_TESTING.md`. No se necesita servidor, base de datos ni proceso de build.
+Publica los HTML, `assets/`, `proyectos/`, `docs/`, `CNAME` y `README.md`. No se necesita servidor, base de datos ni proceso de build.
