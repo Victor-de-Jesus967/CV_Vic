@@ -72,3 +72,13 @@ python -m http.server 8080
 ## GitHub Pages
 
 El sitio no requiere compilación. En **Settings > Pages**, selecciona **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`. El archivo `.nojekyll` ya está incluido. Las instrucciones completas y la futura configuración de `CNAME` están en `README.md`.
+
+
+## Actualización 7 de octubre de 2026
+
+- Aforo destacado primero en la portada y listado, con enlace a Google Play facilitado por el desarrollador.
+- Caso de estudio ampliado con SQLite, JSON/CSV, generación PDF, suscripción mensual y limitaciones del cálculo de gas.
+- URLs canónicas agregadas a portada, proyectos y ficha de Aforo.
+- Validador actualizado para reconocer el archivo CNAME del dominio configurado y retirar referencias a archivos de documentación ausentes.
+- Pendiente: publicar el PDF nuevo en `assets/documents/CV-Victor-Jimenez.pdf` y confirmar el contenido final del perfil `sobre-mi.html`.
+- Esta sección describe cambios de código; no representa una nueva ejecución de pruebas visuales ni de despliegue.
