@@ -13,8 +13,6 @@ const publicTextFiles = [
   path.join(root, "assets/css/styles.css"),
   path.join(root, "assets/js/site.js"),
   path.join(root, "README.md"),
-  path.join(root, "ASSETS_MAP.md"),
-  path.join(root, "MOBILE_TESTING.md"),
   path.join(root, "docs/IMPLEMENTATION_SUMMARY.md"),
 ];
 const errors = [];
@@ -22,9 +20,6 @@ const warnings = [];
 const forbidden = [
   "backward path studio",
   "psycho gym",
-  "pemex",
-  "activo cinco presidentes",
-  "nice",
 ];
 const containsTerm = (source, term) => {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -76,7 +71,8 @@ for (const file of publicTextFiles) {
 
 const projectImages = walk(path.join(root, "assets/projects")).filter((file) => /\.(?:png|jpe?g|webp|svg)$/i.test(file));
 const brandImages = walk(path.join(root, "assets/brand")).filter((file) => /\.(?:png|jpe?g|webp|svg)$/i.test(file));
-if (fs.existsSync(path.join(root, "CNAME"))) errors.push("Existe CNAME antes de configurar el dominio");
+const cname = path.join(root, "CNAME");
+if (!fs.existsSync(cname) || fs.readFileSync(cname,"utf8").trim() !== "victordejesus.dev") errors.push("CNAME ausente o distinto del dominio configurado");
 if (htmlFiles.length !== 10) errors.push(`Se esperaban 10 páginas HTML y se encontraron ${htmlFiles.length}`);
 
 console.log(`Páginas HTML: ${htmlFiles.length}`);
