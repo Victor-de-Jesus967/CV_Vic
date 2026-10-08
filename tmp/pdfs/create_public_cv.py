@@ -73,9 +73,9 @@ def section(title):
 
 
 story = [
-    Paragraph("Víctor J.", styles["Name"]),
-    Paragraph("INGENIERO EN SISTEMAS COMPUTACIONALES · DESARROLLO DE SOFTWARE", styles["Role"]),
-    Paragraph("Ingeniero en Sistemas Computacionales con experiencia en desarrollo móvil, automatización, aplicaciones web y soluciones de TI. Construyo herramientas funcionales para reducir trabajo manual, organizar información y apoyar mejores decisiones.", styles["BodyCV"]),
+    Paragraph("Víctor de Jesús Jiménez Mijangos", styles["Name"]),
+    Paragraph("INGENIERO EN SISTEMAS COMPUTACIONALES · DESARROLLADOR DE SOFTWARE", styles["Role"]),
+    Paragraph("Desarrollador de software con experiencia aplicada en aplicaciones Android, sistemas de escritorio, plataformas web y automatización. Desarrollo soluciones con Flutter, Dart, Python y SQLite, con énfasis en persistencia local, reportes y pruebas de software.", styles["BodyCV"]),
     Table(
         [["mijangos.jimenez967@outlook.es", "victordejesus.dev"]],
         colWidths=[doc.width * 0.62, doc.width * 0.38],
@@ -102,14 +102,15 @@ story += [
 
 story += section("Proyectos y experiencia aplicada")
 projects = [
+    ("Aforo — disponible en Google Play", "Aplicación Android con Flutter y Dart para registrar y calcular aforos de líquidos y gas. Incluye historial local SQLite, generación de PDF, respaldo y restauración JSON, exportación CSV y suscripciones mensuales mediante Google Play Billing. Se documentan 23 pruebas Flutter aprobadas en una revisión técnica."),
     ("Gestor de Activos TI", "Aplicación de escritorio para consultar inventario tecnológico, importar información desde Excel, aplicar filtros y generar reportes en PDF y Excel con Python, PyQt5 y SQLite."),
     ("Inventory", "Aplicación Flutter offline para inventario de joyería con autenticación biométrica, QR, clientes, apartados, historial y respaldo local."),
-    ("Aforos Pro", "Aplicación Android para registrar lecturas, calcular aforos de líquidos y gas sin conexión y generar reportes PDF."),
     ("Nova Control", "Plataforma web demostrativa para centralizar clientes, mensualidades, pagos, ventas, inventario, seguimiento físico y reportes administrativos."),
     ("Taller Testing HITS", "Sitio web responsive para organizar materiales, videos y recursos de un taller de testing de software."),
 ]
 for name, description in projects:
     story.append(Paragraph(f"• <b>{name}</b> — {description}", styles["Item"]))
+story.append(Paragraph('<link href="https://play.google.com/store/apps/details?id=dev.victordejesus.aforo" color="#1478FF">Aforo en Google Play</link>', styles["SmallCV"]))
 
 story += section("Enfoque profesional")
 story += [
@@ -121,10 +122,11 @@ story += [
 
 skills = [
     ("Desarrollo web", "HTML · CSS · JavaScript · Git · GitHub"),
-    ("Desarrollo móvil", "Flutter · Dart · Android · SQLite · aplicaciones offline"),
+    ("Desarrollo móvil", "Flutter · Dart · Kotlin · Android · Material 3 · SQLite"),
     ("Software y datos", "Python · PyQt5 · Pandas · CRUD · SQLite"),
-    ("Integraciones", "QR Scanner · autenticación biométrica · validación de datos"),
-    ("Reportes y respaldo", "PDF · Excel · CSV · JSON"),
+    ("Integraciones", "Google Play Billing · MethodChannel · QR · autenticación biométrica"),
+    ("Reportes y respaldo", "PDF · Excel · CSV · JSON · importación y restauración"),
+    ("Pruebas y distribución", "Flutter Test · pruebas unitarias y de widgets · Android App Bundle"),
     ("Soporte TI", "Mantenimiento preventivo y correctivo · diagnóstico de hardware · ampliación de RAM y almacenamiento"),
 ]
 skill_rows = [[Paragraph(f"<b>{label}</b>", styles["BodyCV"]), Paragraph(value, styles["BodyCV"])] for label, value in skills]
