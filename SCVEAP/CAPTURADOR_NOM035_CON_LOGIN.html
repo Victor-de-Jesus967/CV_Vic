@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Vaciado y Análisis NOM-035-STPS-2018 | PEMEX</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .riesgo-nulo { background-color: #38bdf8; color: #082f49; font-weight: 600; }
+    .riesgo-bajo { background-color: #86efac; color: #064e3b; font-weight: 600; }
+    .riesgo-medio { background-color: #fde047; color: #713f12; font-weight: 600; }
+    .riesgo-alto { background-color: #fb923c; color: #431407; font-weight: 600; }
+    .riesgo-muy-alto { background-color: #dc2626; color: #ffffff; font-weight: 700; }
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+    @keyframes pulseHighlight {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.015); box-shadow: 0 0 0 4px rgba(188, 149, 92, 0.4); }
+      100% { transform: scale(1); }
+    }
+    .animar-carga { animation: pulseHighlight 0.6s ease-out; }
+
+    /* Pantalla de acceso demostrativo; no incorpora autenticación real. */
+    .app-oculta, .login-oculto { display: none !important; }
+    #app-principal { min-height: 100vh; display: flex; flex-direction: column; }
+    #pantalla-login {
+      min-height: 100vh; min-height: 100dvh; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px 16px;
+      background: radial-gradient(ellipse at 12% 13%, rgba(188,149,92,.22) 0%, transparent 42%),
+                  radial-gradient(ellipse at 95% 94%, rgba(255,255,255,.12) 0%, transparent 44%),
+                  linear-gradient(139deg, #38101f 0%, #691c32 55%, #801f3d 100%);
+    }
+    .login-tarjeta { width: min(100%, 440px); background: #fff; border-radius: 22px;
+      box-shadow: 0 24px 70px rgba(25,9,16,.28); overflow: hidden; }
+    .login-franja { height: 6px; background: linear-gradient(90deg, #8f692d, #e5c68a, #bc955c); }
+    .login-interior { padding: 36px 34px 28px; }
+    .login-simbolo { width: 52px; height: 52px; border-radius: 15px; background: #f8f1e5;
+      color: #691c32; display: grid; place-items: center; margin-bottom: 22px; }
+    .login-etiqueta { font-size: 11px; letter-spacing: .11em; text-transform: uppercase;
+      font-weight: 750; color: #8c693c; margin-bottom: 7px; }
+    .login-titulo { font-size: 27px; line-height: 1.2; font-weight: 780; color: #2e1721; margin: 0; }
+    .login-descripcion { color: #64748b; font-size: 13px; line-height: 1.55; margin: 12px 0 26px; }
+    .login-campo { margin-bottom: 17px; }
+    .login-campo label { display: block; font-size: 13px; font-weight: 660; color: #374151; margin-bottom: 7px; }
+    .login-campo input { font: inherit; box-sizing: border-box; width: 100%; border: 1px solid #cbd5e1;
+      border-radius: 10px; padding: 12px 13px; font-size: 14px; outline: none; background: #fff; }
+    .login-campo input:focus { border-color: #8b2a4b; box-shadow: 0 0 0 3px rgba(105,28,50,.13); }
+    .login-error { display: none; color: #b91c1c; background: #fef2f2; padding: 10px 12px;
+      border: 1px solid #fecaca; border-radius: 9px; font-size: 12px; margin: 0 0 17px; }
+    .login-error.visible { display: block; }
+    .login-entrar { width: 100%; border: none; border-radius: 11px; padding: 13px 16px;
+      background: #691c32; color: white; font-weight: 720; font-size: 14px; cursor: pointer; }
+    .login-entrar:hover { background: #521527; }
+    .login-entrar:focus-visible, .login-salir:focus-visible { outline: 3px solid #bc955c; outline-offset: 3px; }
+    .login-demo { margin-top: 24px; background: #faf7f1; border: 1px solid #eedfc6;
+      border-radius: 10px; padding: 13px; font-size: 12px; color: #584331; line-height: 1.7; }
+    .login-demo code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
+    .login-pie { padding: 16px; border-top: 1px solid #f1f5f9; text-align: center;
+      color: #94a3b8; font-size: 11px; }
+    @media (max-width: 480px) { .login-interior { padding: 30px 23px 24px; } .login-titulo { font-size: 24px; } }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+
+  <!-- Pantalla de inicio de sesión: acceso visual de demostración, no protege los datos. -->
+  <section id="pantalla-login" aria-labelledby="login-titulo">
+    <div class="login-tarjeta">
+      <div class="login-franja"></div>
+      <div class="login-interior">
+        <div class="login-simbolo" aria-hidden="true">
+          <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path><path d="M12 14v3"></path>
+          </svg>
+        </div>
+        <div class="login-etiqueta">PEMEX · NOM-035-STPS-2018</div>
+        <h1 id="login-titulo" class="login-titulo">Bienvenido al sistema</h1>
+        <p class="login-descripcion">Inicia sesión para acceder a la captura de cuestionarios y al análisis de resultados psicosociales.</p>
+        <form id="form-login" autocomplete="on">
+          <div class="login-campo">
+            <label for="login-usuario">Usuario</label>
+            <input id="login-usuario" name="username" type="text" placeholder="Ingresa tu usuario" autocomplete="username" required autofocus />
+          </div>
+          <div class="login-campo">
+            <label for="login-contrasena">Contraseña</label>
+            <input id="login-contrasena" name="password" type="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required />
+          </div>
+          <p id="login-error" class="login-error" role="alert" aria-live="polite">Usuario o contraseña incorrectos. Inténtalo nuevamente.</p>
+          <button class="login-entrar" type="submit">Ingresar al sistema</button>
+        </form>
+        <div class="login-demo">Acceso de demostración<br />Usuario: <code>demo</code> &nbsp;·&nbsp; Contraseña: <code>demo</code></div>
+      </div>
+      <div class="login-pie">Acceso demostrativo · No constituye una medida de seguridad</div>
+    </div>
+  </section>
+
+  <div id="app-principal" class="app-oculta" aria-hidden="true">
+
+  <!-- Notificación Flotante (Toast) -->
+  <div id="toast-notificacion" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border-l-4 border-[#BC955C] flex items-center gap-3 max-w-md transition-all">
+    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+    <span id="toast-mensaje" class="text-xs font-medium">Datos actualizados correctamente.</span>
+  </div>
+
+  <!-- Encabezado Institucional -->
+  <header class="bg-[#691C32] text-white shadow-md border-b-4 border-[#BC955C]">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2 text-xs uppercase tracking-widest text-[#E6D194] font-semibold">
+          <span>PEMEX • Dirección de Exploración y Extracción</span>
+          <span>|</span>
+          <span>NOM-035-STPS-2018</span>
+        </div>
+        <h1 class="text-xl md:text-2xl font-bold mt-0.5">
+          Sistema de Captura, Vaciado a Excel y Análisis Psicosocial (Guías I, III y V)
+        </h1>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-cargar-demo" type="button" onclick="cargarDemoKrem(true)" class="px-3.5 py-2 rounded-lg bg-[#BC955C] hover:bg-[#a68049] active:scale-95 text-white text-xs font-semibold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          Cargar Datos Demo (Pozo KREM 1 - 50 Trabajadores)
+        </button>
+        <button id="btn-exportar-csv" type="button" onclick="exportarExcelCSV()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Descargar Base Calificada (.CSV para Excel)
+        </button>
+        <button id="btn-cerrar-sesion" type="button" onclick="cerrarSesionDemo()" class="login-salir px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-semibold transition">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navegación de Pestañas -->
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto gap-1">
+      <button type="button" onclick="cambiarTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-[#691C32] text-[#691C32] whitespace-nowrap">
+        1. Análisis de Resultados (Categorías, Dominios y Áreas)
+      </button>
+      <button type="button" onclick="cambiarTab('tab-sabana')" id="btn-tab-sabana" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap">
+        2. Base de Datos en Excel (Sábana Calificada: <span id="badge-conteo-sabana">50</span>)
+      </button>
+      <button type="button" onclick="cambiarTab('tab-captura')" id="btn-tab-captura" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap">
+        3. Cuestionario al Personal (Guías V, I y III)
+      </button>
+      <button type="button" onclick="cambiarTab('tab-importar')" id="btn-tab-importar" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap">
+        4. Vaciado Masivo desde Forms / Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-7xl mx-auto w-full px-4 py-6 flex-1">
+
+    <!-- ================= TAB 1: DASHBOARD DE RESULTADOS ================= -->
+    <section id="tab-dashboard" class="space-y-6">
+      <!-- Filtros de Unidad de Análisis -->
+      <div id="panel-filtros" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-slate-800">Filtro de Análisis por Centro de Trabajo, Área y Rol</h2>
+            <span id="etiqueta-origen-datos" class="px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-100 text-amber-900">
+              Pozo KREM 1 EXP Equipo PM-329 (Cargado)
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Analice los resultados generales del Centro de Trabajo o segmente por Operación, Mantenimiento y Roles (DJ 1 / DJ 2).</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Área de Trabajo</label>
+            <select id="filtro-area" onchange="actualizarDashboard()" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 font-medium">
+              <option value="TODAS">Todo el Centro de Trabajo (50)</option>
+              <option value="OPERACIÓN">Área: OPERACIÓN (31)</option>
+              <option value="MANTENIMIENTO">Área: MANTENIMIENTO (19)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Rol / Turno</label>
+            <select id="filtro-rol" onchange="actualizarDashboard()" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 font-medium">
+              <option value="TODOS">Todos los Roles (DJ 1 + DJ 2)</option>
+              <option value="DJ 1">Rol DJ 1</option>
+              <option value="DJ 2">Rol DJ 2</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Plantilla Total (N)</label>
+            <input type="number" id="input-plantilla-total" value="56" min="1" onchange="actualizarDashboard()" class="w-20 text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 font-semibold text-center" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjetas de Resumen Ejecutivo -->
+      <div id="grid-kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Muestra Evaluada (n)</div>
+          <div class="text-2xl font-bold text-slate-800 mt-1" id="kpi-muestra">0</div>
+          <div class="text-xs text-slate-500 mt-1" id="kpi-cumplimiento">Muestra req. NOM-035: 49</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Calificación Final (C_final)</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-2xl font-bold text-slate-800" id="kpi-cfinal-pts">0</span>
+            <span id="kpi-cfinal-badge" class="px-2.5 py-0.5 rounded-full text-xs riesgo-nulo">Nulo</span>
+          </div>
+          <div class="text-xs text-slate-500 mt-1">Promedio global Guía III</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Riesgo Alto / Muy Alto (FRPS)</div>
+          <div class="text-2xl font-bold text-orange-600 mt-1" id="kpi-frps-alto">0</div>
+          <div class="text-xs text-slate-500 mt-1" id="kpi-frps-pct">0% de los evaluados</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Casos Violencia (Alto/Muy Alto)</div>
+          <div class="text-2xl font-bold text-rose-600 mt-1" id="kpi-violencia">0</div>
+          <div class="text-xs text-slate-500 mt-1">Requieren Evaluación Específica</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Guía I: Trauma Severo (ATS)</div>
+          <div class="text-2xl font-bold text-red-700 mt-1" id="kpi-ats-envio">0</div>
+          <div class="text-xs text-slate-500 mt-1" id="kpi-ats-detectados">De 0 eventos detectados</div>
+        </div>
+      </div>
+
+      <!-- Tabla 13: Nivel de Riesgo por Categoría y Dominio (Promedios del CT) -->
+      <div id="card-tabla-principal" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-slate-50">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">
+              Calificación y Nivel de Riesgo por Categoría y Dominio (Numeral III.3 NOM-035-STPS-2018)
+            </h3>
+            <p class="text-xs text-slate-500">Muestra el promedio y clasificación de las 5 Categorías y 10 Dominios junto con el conteo exacto de trabajadores por nivel de riesgo.</p>
+          </div>
+          <button type="button" onclick="cambiarTab('tab-sabana')" class="text-xs font-semibold text-[#691C32] hover:underline">
+            Ver los 50 registros individuales en la Sábana &rarr;
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                <th class="py-2.5 px-3 font-bold border-r border-slate-200">CATEGORÍA</th>
+                <th class="py-2.5 px-3 font-bold text-center border-r border-slate-200">PROM. CAT.</th>
+                <th class="py-2.5 px-3 font-bold text-center border-r border-slate-200">CLASIFICACIÓN CAT.</th>
+                <th class="py-2.5 px-3 font-bold border-r border-slate-200">DOMINIO</th>
+                <th class="py-2.5 px-3 font-bold text-center border-r border-slate-200">PROM. DOM.</th>
+                <th class="py-2.5 px-3 font-bold text-center border-r border-slate-200">CLASIFICACIÓN DOM.</th>
+                <th class="py-2.5 px-3 font-bold text-center bg-red-50 text-red-800">Muy Alto (n)</th>
+                <th class="py-2.5 px-3 font-bold text-center bg-orange-50 text-orange-800">Alto (n)</th>
+                <th class="py-2.5 px-3 font-bold text-center bg-yellow-50 text-yellow-800">Medio (n)</th>
+                <th class="py-2.5 px-3 font-bold text-center bg-emerald-50 text-emerald-800">Bajo (n)</th>
+                <th class="py-2.5 px-3 font-bold text-center bg-sky-50 text-sky-800">Nulo (n)</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-categorias-dominios" class="divide-y divide-slate-200">
+              <!-- Llenado dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Desglose Comparativo por Categoría y Guía I -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider mb-1">
+            Distribución de Trabajadores por Categoría y Nivel Global (FRPS)
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Cantidad de trabajadores ubicados en cada nivel de riesgo en las 5 Categorías y en la Calificación Final.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                  <th class="p-2 text-left">Categoría / Calificación</th>
+                  <th class="p-2 text-center text-red-700">Muy Alto</th>
+                  <th class="p-2 text-center text-orange-700">Alto</th>
+                  <th class="p-2 text-center text-yellow-700">Medio</th>
+                  <th class="p-2 text-center text-emerald-700">Bajo</th>
+                  <th class="p-2 text-center text-sky-700">Nulo</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-conteo-categorias" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider mb-1">
+            Resultados Guía de Referencia I (Acontecimientos Traumáticos Severos)
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Identificación de trabajadores sujetos a eventos traumáticos durante o con motivo del trabajo.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                  <th class="p-2 text-left">Unidad / Área</th>
+                  <th class="p-2 text-center">Evaluados</th>
+                  <th class="p-2 text-center">Eventos Detectados (Secc. I)</th>
+                  <th class="p-2 text-center text-red-700 font-bold">Requiere Envío Clínico</th>
+                  <th class="p-2 text-center text-emerald-700 font-bold">No Requiere Envío</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-resumen-ats" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: SÁBANA DE EXCEL CALIFICADA ================= -->
+    <section id="tab-sabana" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Base de Datos Calificada (Vista Previa de Sábana de Excel)</h2>
+          <p class="text-xs text-slate-500">Cada fila muestra al trabajador con su dictamen de Guía I, las 5 Categorías, los 10 Dominios y su Calificación Final (C_final).</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="cargarDemoKrem(true)" class="px-3 py-2 rounded-lg bg-[#BC955C] hover:bg-[#a68049] text-white text-xs font-semibold transition">
+            Restaurar 50 Trabajadores (Pozo KREM 1)
+          </button>
+          <button type="button" onclick="exportarExcelCSV()" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+            Exportar Sábana Completa (.CSV)
+          </button>
+          <button type="button" onclick="limpiarBaseDatos()" class="px-3 py-2 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold transition">
+            Vaciar Base de Datos
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar max-h-[600px]">
+          <table class="w-full text-xs text-left border-collapse whitespace-nowrap">
+            <thead class="bg-slate-800 text-white sticky top-0 z-10">
+              <tr>
+                <th class="p-2.5 border-r border-slate-700">#</th>
+                <th class="p-2.5 border-r border-slate-700">Ficha</th>
+                <th class="p-2.5 border-r border-slate-700">Categoría / Puesto</th>
+                <th class="p-2.5 border-r border-slate-700">Área</th>
+                <th class="p-2.5 border-r border-slate-700">Rol</th>
+                <th class="p-2.5 border-r border-slate-700">Sexo</th>
+                <th class="p-2.5 border-r border-slate-700 bg-red-900">Guía I (Trauma)</th>
+                <th class="p-2.5 border-r border-slate-700 bg-slate-900">C. Final</th>
+                <th class="p-2.5 border-r border-slate-700 bg-slate-900">Nivel Final</th>
+                <th class="p-2.5 border-r border-slate-700">Cat 1: Ambiente</th>
+                <th class="p-2.5 border-r border-slate-700">Cat 2: Fact. Actividad</th>
+                <th class="p-2.5 border-r border-slate-700">Cat 3: Tiempo</th>
+                <th class="p-2.5 border-r border-slate-700">Cat 4: Liderazgo/Rel</th>
+                <th class="p-2.5 border-r border-slate-700">Cat 5: Entorno Org.</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 1: Cond. Amb.</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 2: Carga Trab.</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 3: Falta Control</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 4: Jornada</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 5: Trab-Familia</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 6: Liderazgo</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 7: Relaciones</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 8: Violencia</th>
+                <th class="p-2.5 border-r border-slate-700">Dom 9: Reconocim.</th>
+                <th class="p-2.5">Dom 10: Pertenencia</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-sabana" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: CAPTURA INDIVIDUAL (CUESTIONARIO) ================= -->
+    <section id="tab-captura" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Formulario de Aplicación para el Personal (Guías V, I y III)</h2>
+            <p class="text-xs text-slate-500">Al guardar las respuestas del trabajador, se califican todos los ítems directos e inversos y se agregan automáticamente a la base de Excel.</p>
+          </div>
+          <button type="button" onclick="autollenarFormularioDemo()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+            Autollenar Respuestas de Ejemplo
+          </button>
+        </div>
+
+        <form id="form-cuestionario" onsubmit="guardarCuestionarioIndividual(event)" class="space-y-6 mt-5">
+          <!-- Guía V: Datos del Trabajador -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-[#691C32] mb-3">
+              Parte 1: Guía de Referencia V (Datos Sociolaborales del Trabajador)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Ficha / ID *</label>
+                <input type="text" id="cap-ficha" required placeholder="Ej. 497283" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Sexo *</label>
+                <select id="cap-sexo" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="MASCULINO">Masculino</option>
+                  <option value="FEMENINO">Femenino</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Rango de Edad *</label>
+                <select id="cap-edad" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="ENTRE 30 Y 39 AÑOS">Entre 30 y 39 años</option>
+                  <option value="ENTRE 40 Y 49 AÑOS">Entre 40 y 49 años</option>
+                  <option value="ENTRE 50 Y 59 AÑOS">Entre 50 y 59 años</option>
+                  <option value="ENTRE 60 Y 69 AÑOS">Entre 60 y 69 años</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Régimen Contractual *</label>
+                <select id="cap-regimen" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="PLANTA SINDICALIZADO">Planta Sindicalizado (PS)</option>
+                  <option value="PLANTA CONFIANZA">Planta Confianza (PC)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Área de Trabajo *</label>
+                <select id="cap-area" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="OPERACIÓN">OPERACIÓN</option>
+                  <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Rol / Guardia *</label>
+                <select id="cap-rol" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="DJ 1">DJ 1</option>
+                  <option value="DJ 2">DJ 2</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Categoría / Puesto *</label>
+                <select id="cap-puesto" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5">
+                  <option value="AYUDANTE DE PERFORACIÓN (PISO) ROTARIA">AYUDANTE DE PERFORACIÓN (PISO) ROTARIA</option>
+                  <option value="PERFORADOR">PERFORADOR</option>
+                  <option value="AYUDANTE DE PERFORADOR-ROTARIA">AYUDANTE DE PERFORADOR-ROTARIA</option>
+                  <option value="AYUDANTE DE PERFORACIÓN (CHANGO) ROTARIA">AYUDANTE DE PERFORACIÓN (CHANGO) ROTARIA</option>
+                  <option value="AYUDANTE DE PERFORACIÓN (CHANGO EXTRA) ROTARIA">AYUDANTE DE PERFORACIÓN (CHANGO EXTRA) ROTARIA</option>
+                  <option value="AYUDANTE DE TRABAJOS DE PERFORACIÓN">AYUDANTE DE TRABAJOS DE PERFORACIÓN</option>
+                  <option value="INGENIERO DE OPERACIONES">INGENIERO DE OPERACIONES</option>
+                  <option value="INSPECTOR TÉCNICO DE PERFORACIÓN">INSPECTOR TÉCNICO DE PERFORACIÓN</option>
+                  <option value="OPERARIO DE SEGUNDA">OPERARIO DE SEGUNDA</option>
+                  <option value="ENCARGADO ELÉCTRICO">ENCARGADO ELÉCTRICO</option>
+                  <option value="ENCARGADO MECÁNICO">ENCARGADO MECÁNICO</option>
+                  <option value="ENCARGADO SOLDADOR">ENCARGADO SOLDADOR</option>
+                  <option value="AYUDANTE ELÉCTRICO">AYUDANTE ELÉCTRICO</option>
+                  <option value="AYUDANTE MECÁNICO">AYUDANTE MECÁNICO</option>
+                  <option value="AYUDANTE SOLDADOR">AYUDANTE SOLDADOR</option>
+                  <option value="SUPERVISOR ELECTRICO">SUPERVISOR ELECTRICO</option>
+                  <option value="SUPERVISOR MECANICO">SUPERVISOR MECANICO</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guía I: Acontecimientos Traumáticos Severos -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-[#691C32] mb-2">
+              Parte 2: Guía de Referencia I (Identificación de Acontecimientos Traumáticos Severos)
+            </h3>
+            <div id="contenedor-preguntas-guia1" class="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-200"></div>
+          </div>
+
+          <!-- Guía III: 72 Preguntas -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-[#691C32] mb-2">
+              Parte 3: Guía de Referencia III (72 Reactivos - Factores de Riesgo Psicosocial y Entorno Organizacional)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 bg-amber-50 p-3.5 rounded-lg border border-amber-200">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-amber-900">¿En su trabajo debe brindar servicio a clientes o usuarios? (Activa ítems 65-68)</span>
+                <select id="cap-clientes" onchange="toggleCondicionales()" class="text-xs border border-amber-400 rounded px-2.5 py-1 bg-white font-bold">
+                  <option value="NO">NO</option>
+                  <option value="SI">SÍ</option>
+                </select>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-amber-900">¿Es jefe de otros trabajadores? (Activa ítems 69-72)</span>
+                <select id="cap-jefe" onchange="toggleCondicionales()" class="text-xs border border-amber-400 rounded px-2.5 py-1 bg-white font-bold">
+                  <option value="NO">NO</option>
+                  <option value="SI">SÍ</option>
+                </select>
+              </div>
+            </div>
+            <div id="contenedor-preguntas-guia3" class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2"></div>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-slate-200">
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-[#691C32] hover:bg-[#521527] text-white font-semibold text-sm shadow-md transition">
+              Calificar Cuestionario y Agregar a la Base de Excel
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: VACIADO MASIVO DESDE EXCEL / FORMS ================= -->
+    <section id="tab-importar" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Vaciado Masivo desde Microsoft Forms / Excel (Pegar Celdas)</h2>
+          <p class="text-xs text-slate-500 mt-1">
+            Copie las filas de respuestas de su hoja de Excel (separadas por tabulaciones) y péguelas aquí. El sistema acepta tanto respuestas en texto (<code>Siempre</code>, <code>Casi siempre</code>, <code>Algunas veces</code>, <code>Casi nunca</code>, <code>Nunca</code>) como valores numéricos.
+          </p>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-1">
+          <div class="font-bold text-slate-800">Formato esperado de columnas por fila (separadas por Tabulador o Coma):</div>
+          <p><code>Col 1: Ficha</code> | <code>Col 2: Sexo</code> | <code>Col 3: Edad</code> | <code>Col 4: Régimen</code> | <code>Col 5: Área (OPERACIÓN/MANTENIMIENTO)</code> | <code>Col 6: Rol (DJ 1/DJ 2)</code> | <code>Col 7: Puesto</code> | <code>Cols 8 a 27: 20 respuestas Guía I (SI/NO)</code> | <code>Cols 28 a 99: 72 respuestas Guía III (Siempre..Nunca o 0..4)</code></p>
+        </div>
+
+        <textarea id="textarea-importar" rows="8" placeholder="Pegue aquí las filas copiadas directamente desde Excel..." class="w-full font-mono text-xs border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#691C32]"></textarea>
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onclick="generarEjemploPegado()" class="px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold">
+            Insertar 3 Filas de Prueba en el Recuadro
+          </button>
+          <button type="button" onclick="procesarVaciadoMasivo()" class="px-5 py-2.5 rounded-xl bg-[#691C32] hover:bg-[#521527] text-white text-xs font-semibold shadow-sm">
+            Procesar y Analizar Filas Pegadas
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  </div><!-- /app-principal -->
+
+  <script>
+    // =========================================================================
+    // 1. CATÁLOGO OFICIAL DE PREGUNTAS Y REGLAS NOM-035-STPS-2018
+    // =========================================================================
+    const PREGUNTAS_GUIA_1 = [
+      { seccion: "I. Acontecimiento traumático severo", num: 1, texto: "¿Accidente que tenga como consecuencia la muerte, la pérdida de un miembro o una lesión grave?" },
+      { seccion: "I. Acontecimiento traumático severo", num: 2, texto: "¿Asaltos?" },
+      { seccion: "I. Acontecimiento traumático severo", num: 3, texto: "¿Actos violentos que derivaron en lesiones graves?" },
+      { seccion: "I. Acontecimiento traumático severo", num: 4, texto: "¿Secuestro?" },
+      { seccion: "I. Acontecimiento traumático severo", num: 5, texto: "¿Amenazas?" },
+      { seccion: "I. Acontecimiento traumático severo", num: 6, texto: "¿Cualquier otro que ponga en riesgo su vida o salud, y/o la de otras personas?" },
+      { seccion: "II. Recuerdos persistentes (último mes)", num: 7, texto: "¿Ha tenido recuerdos recurrentes sobre el acontecimiento que le provocan malestares?" },
+      { seccion: "II. Recuerdos persistentes (último mes)", num: 8, texto: "¿Ha tenido sueños de carácter recurrente sobre el acontecimiento, que le producen malestar?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 9, texto: "¿Se ha esforzado por evitar todo tipo de sentimientos, conversaciones o situaciones que le puedan recordar el acontecimiento?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 10, texto: "¿Se ha esforzado por evitar todo tipo de actividades, lugares o personas que motivan recuerdos del acontecimiento?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 11, texto: "¿Ha tenido dificultad para recordar alguna parte importante del evento?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 12, texto: "¿Ha disminuido su interés en sus actividades cotidianas?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 13, texto: "¿Se ha sentido usted alejado o distante de los demás?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 14, texto: "¿Ha notado que tiene dificultad para expresar sus sentimientos?" },
+      { seccion: "III. Esfuerzo por evitar circunstancias (último mes)", num: 15, texto: "¿Ha tenido la impresión de que su vida se va a acortar, que va a morir antes que otras personas o que tiene un futuro limitado?" },
+      { seccion: "IV. Afectación (último mes)", num: 16, texto: "¿Ha tenido usted dificultades para dormir?" },
+      { seccion: "IV. Afectación (último mes)", num: 17, texto: "¿Ha estado particularmente irritable o le han dado arranques de coraje?" },
+      { seccion: "IV. Afectación (último mes)", num: 18, texto: "¿Ha tenido dificultad para concentrarse?" },
+      { seccion: "IV. Afectación (último mes)", num: 19, texto: "¿Ha estado nervioso o constantemente en alerta?" },
+      { seccion: "IV. Afectación (último mes)", num: 20, texto: "¿Se ha sobresaltado fácilmente por cualquier cosa?" }
+    ];
+
+    const PREGUNTAS_GUIA_3 = [
+      "1. El espacio donde trabajo me permite realizar mis actividades de manera segura e higiénica",
+      "2. Mi trabajo me exige hacer mucho esfuerzo físico",
+      "3. Me preocupa sufrir un accidente en mi trabajo",
+      "4. Considero que en mi trabajo se aplican las normas de seguridad y salud en el trabajo",
+      "5. Considero que las actividades que realizo son peligrosas",
+      "6. Por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno",
+      "7. Por la cantidad de trabajo que tengo debo trabajar sin parar",
+      "8. Considero que es necesario mantener un ritmo de trabajo acelerado",
+      "9. Mi trabajo exige que esté muy concentrado",
+      "10. Mi trabajo requiere que memorice mucha información",
+      "11. En mi trabajo tengo que tomar decisiones difíciles muy rápido",
+      "12. Mi trabajo exige que atienda varios asuntos al mismo tiempo",
+      "13. En mi trabajo soy responsable de cosas de mucho valor",
+      "14. Respondo ante mi jefe por los resultados de toda mi área de trabajo",
+      "15. En el trabajo me dan órdenes contradictorias",
+      "16. Considero que en mi trabajo me piden hacer cosas innecesarias",
+      "17. Trabajo horas extras más de tres veces a la semana",
+      "18. Mi trabajo me exige laborar en días de descanso, festivos o fines de semana",
+      "19. Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales",
+      "20. Debo atender asuntos de trabajo cuando estoy en casa",
+      "21. Pienso en las actividades familiares o personales cuando estoy en mi trabajo",
+      "22. Pienso que mis responsabilidades familiares afectan mi trabajo",
+      "23. Mi trabajo permite que desarrolle nuevas habilidades",
+      "24. En mi trabajo puedo aspirar a un mejor puesto",
+      "25. Durante mi jornada de trabajo puedo tomar pausas cuando las necesito",
+      "26. Puedo decidir cuánto trabajo realizo durante la jornada laboral",
+      "27. Puedo decidir la velocidad a la que realizo mis actividades en mi trabajo",
+      "28. Puedo cambiar el orden de las actividades que realizo en mi trabajo",
+      "29. Los cambios que se presentan en mi trabajo dificultan mi labor",
+      "30. Cuando se presentan cambios en mi trabajo se tienen en cuenta mis ideas o aportaciones",
+      "31. Me informan con claridad cuáles son mis funciones",
+      "32. Me explican claramente los resultados que debo obtener en mi trabajo",
+      "33. Me explican claramente los objetivos de mi trabajo",
+      "34. Me informan con quién puedo resolver problemas o asuntos de trabajo",
+      "35. Me permiten asistir a capacitaciones relacionadas con mi trabajo",
+      "36. Recibo capacitación útil para hacer mi trabajo",
+      "37. Mi jefe ayuda a organizar mejor el trabajo",
+      "38. Mi jefe tiene en cuenta mis puntos de vista y opiniones",
+      "39. Mi jefe me comunica a tiempo la información relacionada con el trabajo",
+      "40. La orientación que me da mi jefe me ayuda a realizar mejor mi trabajo",
+      "41. Mi jefe ayuda a solucionar los problemas que se presentan en el trabajo",
+      "42. Puedo confiar en mis compañeros de trabajo",
+      "43. Entre compañeros solucionamos los problemas de trabajo de forma respetuosa",
+      "44. En mi trabajo me hacen sentir parte del grupo",
+      "45. Cuando tenemos que realizar trabajo de equipo los compañeros colaboran",
+      "46. Mis compañeros de trabajo me ayudan cuando tengo dificultades",
+      "47. Me informan sobre lo que hago bien en mi trabajo",
+      "48. La forma como evalúan mi trabajo en mi centro de trabajo me ayuda a mejorar mi desempeño",
+      "49. En mi centro de trabajo me pagan a tiempo mi salario",
+      "50. El pago que recibo es el que merezco por el trabajo que realizo",
+      "51. Si obtengo los resultados esperados en mi trabajo me recompensan o reconocen",
+      "52. Las personas que hacen bien el trabajo pueden crecer laboralmente",
+      "53. Considero que mi trabajo es estable",
+      "54. En mi trabajo existe continua rotación de personal",
+      "55. Siento orgullo de laborar en este centro de trabajo",
+      "56. Me siento comprometido con mi trabajo",
+      "57. En mi trabajo puedo expresarme libremente sin interrupciones",
+      "58. Recibo críticas constantes a mi persona y/o trabajo",
+      "59. Recibo burlas, calumnias, difamaciones, humillaciones o ridiculizaciones",
+      "60. Se ignora mi presencia o se me excluye de las reuniones de trabajo y en la toma de decisiones",
+      "61. Se manipulan las situaciones de trabajo para hacerme parecer un mal trabajador",
+      "62. Se ignoran mis éxitos laborales y se atribuyen a otros trabajadores",
+      "63. Me bloquean o impiden las oportunidades que tengo para obtener ascenso o mejora en mi trabajo",
+      "64. He presenciado actos de violencia en mi centro de trabajo",
+      "65. [Clientes] Atiendo clientes o usuarios muy enojados",
+      "66. [Clientes] Mi trabajo me exige atender personas muy necesitadas de ayuda o enfermas",
+      "67. [Clientes] Para hacer mi trabajo debo demostrar sentimientos distintos a los míos",
+      "68. [Clientes] Mi trabajo me exige atender situaciones de violencia",
+      "69. [Jefes] Comunican tarde los asuntos de trabajo",
+      "70. [Jefes] Dificultan el logro de los resultados del trabajo",
+      "71. [Jefes] Cooperan poco cuando se necesita",
+      "72. [Jefes] Ignoran las sugerencias para mejorar su trabajo"
+    ];
+
+    // Tabla 5 NOM-035: Ítems con calificación 0 a 4 (Siempre=0 ... Nunca=4)
+    const ITEMS_INVERSOS = new Set([
+      1, 4, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+      41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57
+    ]);
+
+    function mostrarToast(mensaje) {
+      const toast = document.getElementById("toast-notificacion");
+      const texto = document.getElementById("toast-mensaje");
+      if (!toast || !texto) return;
+      texto.textContent = mensaje;
+      toast.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 3800);
+    }
+
+    function calificarItemGuia3(numItem, respuesta) {
+      if (respuesta === null || respuesta === undefined || respuesta === "") return 0;
+      const texto = String(respuesta).trim().toUpperCase();
+      const esInverso = ITEMS_INVERSOS.has(numItem);
+
+      const mapaInverso = { "SIEMPRE": 0, "CASI SIEMPRE": 1, "ALGUNAS VECES": 2, "CASI NUNCA": 3, "NUNCA": 4 };
+      const mapaDirecto = { "SIEMPRE": 4, "CASI SIEMPRE": 3, "ALGUNAS VECES": 2, "CASI NUNCA": 1, "NUNCA": 0 };
+
+      if (esInverso && texto in mapaInverso) return mapaInverso[texto];
+      if (!esInverso && texto in mapaDirecto) return mapaDirecto[texto];
+
+      const num = Number(texto);
+      if (!isNaN(num) && num >= 0 && num <= 4) return num;
+      return 0;
+    }
+
+    function clasificarRiesgo(valor, limites) {
+      if (valor < limites[0]) return "Nulo";
+      if (valor < limites[1]) return "Bajo";
+      if (valor < limites[2]) return "Medio";
+      if (valor < limites[3]) return "Alto";
+      return "Muy alto";
+    }
+
+    const RANGOS = {
+      final: [50, 75, 99, 140],
+      cat1: [5, 9, 11, 14],
+      cat2: [15, 30, 45, 60],
+      cat3: [5, 7, 10, 13],
+      cat4: [14, 29, 42, 58],
+      cat5: [10, 14, 18, 23],
+      dom1: [5, 9, 11, 14],
+      dom2: [15, 21, 27, 37],
+      dom3: [11, 16, 21, 25],
+      dom4: [1, 2, 4, 6],
+      dom5: [4, 6, 8, 10],
+      dom6: [9, 12, 16, 20],
+      dom7: [10, 13, 17, 21],
+      dom8: [7, 10, 13, 16],
+      dom9: [6, 10, 14, 18],
+      dom10: [4, 6, 8, 10]
+    };
+
+    function claseColorRiesgo(nivel) {
+      switch (nivel) {
+        case "Nulo": return "riesgo-nulo";
+        case "Bajo": return "riesgo-bajo";
+        case "Medio": return "riesgo-medio";
+        case "Alto": return "riesgo-alto";
+        case "Muy alto": return "riesgo-muy-alto";
+        default: return "bg-slate-200 text-slate-700";
+      }
+    }
+
+    function evaluarTrabajador(registro) {
+      const g1 = registro.respuestasG1 || Array(20).fill("NO");
+      const cuentaSI = (arr) => arr.filter(x => String(x).toUpperCase().startsWith("S")).length;
+      const s1 = cuentaSI(g1.slice(0, 6));
+      const s2 = cuentaSI(g1.slice(6, 8));
+      const s3 = cuentaSI(g1.slice(8, 15));
+      const s4 = cuentaSI(g1.slice(15, 20));
+
+      const eventoDetectado = s1 >= 1;
+      const requiereValoracion = eventoDetectado && (s2 >= 1 || s3 >= 3 || s4 >= 2);
+
+      const p = registro.puntajesG3;
+      const sum = (items) => items.reduce((acc, itemNum) => acc + (p[itemNum - 1] || 0), 0);
+
+      const dom1 = sum([1, 2, 3, 4, 5]);
+      const dom2 = sum([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 65, 66, 67, 68]);
+      const dom3 = sum([23, 24, 25, 26, 27, 28, 29, 30, 35, 36]);
+      const dom4 = sum([17, 18]);
+      const dom5 = sum([19, 20, 21, 22]);
+      const dom6 = sum([31, 32, 33, 34, 37, 38, 39, 40, 41]);
+      const dom7 = sum([42, 43, 44, 45, 46, 69, 70, 71, 72]);
+      const dom8 = sum([57, 58, 59, 60, 61, 62, 63, 64]);
+      const dom9 = sum([47, 48, 49, 50, 51, 52]);
+      const dom10 = sum([53, 54, 55, 56]);
+
+      const cat1 = dom1;
+      const cat2 = dom2 + dom3;
+      const cat3 = dom4 + dom5;
+      const cat4 = dom6 + dom7 + dom8;
+      const cat5 = dom9 + dom10;
+
+      const cfinal = cat1 + cat2 + cat3 + cat4 + cat5;
+
+      return {
+        ...registro,
+        atsDetectado: eventoDetectado,
+        atsRequiere: requiereValoracion,
+        dom: { dom1, dom2, dom3, dom4, dom5, dom6, dom7, dom8, dom9, dom10 },
+        domNivel: {
+          dom1: clasificarRiesgo(dom1, RANGOS.dom1),
+          dom2: clasificarRiesgo(dom2, RANGOS.dom2),
+          dom3: clasificarRiesgo(dom3, RANGOS.dom3),
+          dom4: clasificarRiesgo(dom4, RANGOS.dom4),
+          dom5: clasificarRiesgo(dom5, RANGOS.dom5),
+          dom6: clasificarRiesgo(dom6, RANGOS.dom6),
+          dom7: clasificarRiesgo(dom7, RANGOS.dom7),
+          dom8: clasificarRiesgo(dom8, RANGOS.dom8),
+          dom9: clasificarRiesgo(dom9, RANGOS.dom9),
+          dom10: clasificarRiesgo(dom10, RANGOS.dom10)
+        },
+        cat: { cat1, cat2, cat3, cat4, cat5 },
+        catNivel: {
+          cat1: clasificarRiesgo(cat1, RANGOS.cat1),
+          cat2: clasificarRiesgo(cat2, RANGOS.cat2),
+          cat3: clasificarRiesgo(cat3, RANGOS.cat3),
+          cat4: clasificarRiesgo(cat4, RANGOS.cat4),
+          cat5: clasificarRiesgo(cat5, RANGOS.cat5)
+        },
+        cfinal,
+        cfinalNivel: clasificarRiesgo(cfinal, RANGOS.final)
+      };
+    }
+
+    let BASE_TRABAJADORES = [];
+
+    // =========================================================================
+    // 2. GENERADOR EXACTO DEL INFORME POZO KREM 1 EXP EQUIPO PM-329 (50 CASOS)
+    // =========================================================================
+    function distribuirPuntajeEnItems(totalDeseado, listaItems) {
+      const n = listaItems.length;
+      const res = {};
+      let restante = totalDeseado;
+      for (let i = 0; i < n; i++) {
+        const val = i === n - 1 ? Math.min(4, Math.max(0, restante)) : Math.min(4, Math.floor(restante / (n - i)));
+        res[listaItems[i]] = val;
+        restante -= val;
+      }
+      return res;
+    }
+
+    // Genera un arreglo de puntajes exactos según conteos [MuyAlto, Alto, Medio, Bajo, Nulo] y valores representativos
+    function expandirConteos(conteos, valoresRepresentativos) {
+      const resultado = [];
+      conteos.forEach((cantidad, idxNivel) => {
+        for (let k = 0; k < cantidad; k++) {
+          resultado.push(valoresRepresentativos[idxNivel]);
+        }
+      });
+      return resultado;
+    }
+
+    function cargarDemoKrem(mostrarAviso = false) {
+      BASE_TRABAJADORES = [];
+
+      // Restablecer filtros para mostrar todo el Centro de Trabajo al presionar el botón
+      const selArea = document.getElementById("filtro-area");
+      const selRol = document.getElementById("filtro-rol");
+      const inpPlantilla = document.getElementById("input-plantilla-total");
+      if (selArea) selArea.value = "TODAS";
+      if (selRol) selRol.value = "TODOS";
+      if (inpPlantilla) inpPlantilla.value = "56";
+
+      // Puestos de los 31 evaluados en OPERACIÓN y 19 evaluados en MANTENIMIENTO
+      const puestosOp = [
+        "INGENIERO DE OPERACIONES", "INSPECTOR TÉCNICO DE PERFORACIÓN", "INSPECTOR TÉCNICO DE PERFORACIÓN",
+        "PERFORADOR", "PERFORADOR", "PERFORADOR", "PERFORADOR",
+        "AYUDANTE DE PERFORACIÓN (CHANGO EXTRA) ROTARIA",
+        "AYUDANTE DE PERFORACIÓN (CHANGO) ROTARIA", "AYUDANTE DE PERFORACIÓN (CHANGO) ROTARIA", "AYUDANTE DE PERFORACIÓN (CHANGO) ROTARIA",
+        "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA",
+        "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA",
+        "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA",
+        "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA", "AYUDANTE DE PERFORACIÓN (PISO) ROTARIA",
+        "AYUDANTE DE PERFORADOR-ROTARIA", "AYUDANTE DE PERFORADOR-ROTARIA", "AYUDANTE DE PERFORADOR-ROTARIA", "AYUDANTE DE PERFORADOR-ROTARIA",
+        "AYUDANTE DE TRABAJOS DE PERFORACIÓN", "AYUDANTE DE TRABAJOS DE PERFORACIÓN", "AYUDANTE DE TRABAJOS DE PERFORACIÓN", "AYUDANTE DE TRABAJOS DE PERFORACIÓN"
+      ];
+      const puestosMant = [
+        "AYUDANTE ELÉCTRICO", "AYUDANTE ELÉCTRICO", "AYUDANTE MECÁNICO", "AYUDANTE MECÁNICO",
+        "AYUDANTE SOLDADOR", "AYUDANTE SOLDADOR", "ENCARGADO ELÉCTRICO", "ENCARGADO ELÉCTRICO",
+        "ENCARGADO MECÁNICO", "ENCARGADO MECÁNICO", "ENCARGADO SOLDADOR",
+        "OPERARIO DE SEGUNDA", "OPERARIO DE SEGUNDA", "OPERARIO DE SEGUNDA", "OPERARIO DE SEGUNDA",
+        "SUPERVISOR ELECTRICO", "SUPERVISOR ELECTRICO", "SUPERVISOR MECANICO", "SUPERVISOR MECANICO"
+      ];
+
+      // Conteos exactos de las gráficas del Informe Pozo KREM 1 por subgrupo:
+      // Orden de subgrupos: Op DJ1 (17), Op DJ2 (14), Mant DJ1 (9), Mant DJ2 (10) -> Total = 50
+      const distPorSubgrupo = {
+        // Dom 1: Condiciones en el ambiente de trabajo (Prom = 10)
+        dom1: [
+          ...expandirConteos([2, 6, 4, 4, 1], [15, 12, 10, 7, 3]),
+          ...expandirConteos([3, 6, 3, 2, 0], [15, 12, 10, 7, 3]),
+          ...expandirConteos([0, 2, 4, 3, 0], [15, 12, 10, 7, 3]),
+          ...expandirConteos([1, 1, 3, 5, 0], [15, 12, 10, 7, 3])
+        ],
+        // Dom 2: Carga de trabajo (Prom = 24)
+        dom2: [
+          ...expandirConteos([0, 10, 3, 3, 1], [38, 29, 23, 18, 12]),
+          ...expandirConteos([0, 6, 6, 1, 1], [38, 29, 23, 18, 12]),
+          ...expandirConteos([0, 4, 2, 3, 0], [38, 29, 23, 18, 12]),
+          ...expandirConteos([0, 2, 3, 4, 1], [38, 29, 23, 18, 12])
+        ],
+        // Dom 3: Falta de control sobre el trabajo (Prom = 15)
+        dom3: [
+          ...expandirConteos([0, 1, 6, 7, 3], [26, 22, 18, 13, 9]),
+          ...expandirConteos([1, 1, 6, 6, 0], [26, 22, 18, 13, 9]),
+          ...expandirConteos([0, 1, 1, 5, 2], [26, 22, 18, 13, 9]),
+          ...expandirConteos([0, 1, 3, 4, 2], [26, 22, 18, 13, 9])
+        ],
+        // Dom 4: Jornada de trabajo (Prom = 4)
+        dom4: [
+          ...expandirConteos([2, 7, 7, 0, 1], [6, 5, 3, 1, 0]),
+          ...expandirConteos([4, 6, 0, 2, 2], [6, 5, 3, 1, 0]),
+          ...expandirConteos([1, 5, 1, 0, 2], [6, 5, 3, 1, 0]),
+          ...expandirConteos([2, 3, 3, 1, 1], [6, 5, 3, 1, 0])
+        ],
+        // Dom 5: Interferencia en la relación trabajo-familia (Prom = 2)
+        dom5: [
+          ...expandirConteos([0, 0, 0, 3, 14], [10, 8, 6, 4, 1]),
+          ...expandirConteos([0, 0, 0, 6, 8], [10, 8, 6, 4, 1]),
+          ...expandirConteos([0, 0, 0, 3, 6], [10, 8, 6, 4, 1]),
+          ...expandirConteos([0, 0, 0, 3, 7], [10, 8, 6, 4, 1])
+        ],
+        // Dom 6: Liderazgo (Prom = 7)
+        dom6: [
+          ...expandirConteos([0, 2, 1, 2, 12], [21, 17, 13, 10, 4]),
+          ...expandirConteos([1, 0, 1, 4, 8], [21, 17, 13, 10, 4]),
+          ...expandirConteos([0, 1, 1, 2, 5], [21, 17, 13, 10, 4]),
+          ...expandirConteos([0, 0, 4, 0, 6], [21, 17, 13, 10, 4])
+        ],
+        // Dom 7: Relaciones en el trabajo (Prom = 4)
+        dom7: [
+          ...expandirConteos([0, 0, 0, 0, 17], [22, 18, 14, 11, 3]),
+          ...expandirConteos([0, 0, 1, 2, 11], [22, 18, 14, 11, 3]),
+          ...expandirConteos([0, 1, 0, 1, 7], [22, 18, 14, 11, 3]),
+          ...expandirConteos([0, 0, 1, 0, 9], [22, 18, 14, 11, 3])
+        ],
+        // Dom 8: Violencia laboral (Prom = 4)
+        dom8: [
+          ...expandirConteos([0, 1, 0, 3, 13], [17, 14, 11, 8, 2]),
+          ...expandirConteos([0, 1, 0, 4, 9], [17, 14, 11, 8, 2]),
+          ...expandirConteos([0, 0, 1, 0, 8], [17, 14, 11, 8, 2]),
+          ...expandirConteos([0, 0, 1, 2, 7], [17, 14, 11, 8, 2])
+        ],
+        // Dom 9: Reconocimiento del desempeño (Prom = 7)
+        dom9: [
+          ...expandirConteos([0, 0, 2, 3, 12], [19, 15, 11, 7, 4]),
+          ...expandirConteos([0, 3, 5, 4, 2], [19, 15, 11, 7, 4]),
+          ...expandirConteos([0, 1, 1, 4, 3], [19, 15, 11, 7, 4]),
+          ...expandirConteos([0, 1, 1, 6, 2], [19, 15, 11, 7, 4])
+        ],
+        // Dom 10: Insuficiente sentido de pertenencia e inestabilidad (Prom = 3)
+        dom10: [
+          ...expandirConteos([0, 0, 2, 7, 8], [11, 9, 6, 4, 2]),
+          ...expandirConteos([0, 0, 0, 7, 7], [11, 9, 6, 4, 2]),
+          ...expandirConteos([0, 0, 0, 2, 7], [11, 9, 6, 4, 2]),
+          ...expandirConteos([0, 0, 0, 1, 9], [11, 9, 6, 4, 2])
+        ]
+      };
+
+      for (let i = 0; i < 50; i++) {
+        const esOp = i < 31;
+        const area = esOp ? "OPERACIÓN" : "MANTENIMIENTO";
+        const rol = esOp ? (i < 17 ? "DJ 1" : "DJ 2") : (i - 31 < 9 ? "DJ 1" : "DJ 2");
+        const puesto = esOp ? puestosOp[i] : puestosMant[i - 31];
+        const sexo = (!esOp && i === 31) ? "FEMENINO" : "MASCULINO";
+        const regimen = i < 7 ? "PLANTA CONFIANZA" : "PLANTA SINDICALIZADO";
+
+        const d1 = distPorSubgrupo.dom1[i];
+        const d2 = distPorSubgrupo.dom2[i];
+        const d3 = distPorSubgrupo.dom3[i];
+        const d4 = distPorSubgrupo.dom4[i];
+        const d5 = distPorSubgrupo.dom5[i];
+        const d6 = distPorSubgrupo.dom6[i];
+        const d7 = distPorSubgrupo.dom7[i];
+        const d8 = distPorSubgrupo.dom8[i];
+        const d9 = distPorSubgrupo.dom9[i];
+        const d10 = distPorSubgrupo.dom10[i];
+
+        const mapaItems = {
+          ...distribuirPuntajeEnItems(d1, [1, 2, 3, 4, 5]),
+          ...distribuirPuntajeEnItems(d2, [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+          ...distribuirPuntajeEnItems(d3, [23, 24, 25, 26, 27, 28, 29, 30, 35, 36]),
+          ...distribuirPuntajeEnItems(d4, [17, 18]),
+          ...distribuirPuntajeEnItems(d5, [19, 20, 21, 22]),
+          ...distribuirPuntajeEnItems(d6, [31, 32, 33, 34, 37, 38, 39, 40, 41]),
+          ...distribuirPuntajeEnItems(d7, [42, 43, 44, 45, 46]),
+          ...distribuirPuntajeEnItems(d8, [57, 58, 59, 60, 61, 62, 63, 64]),
+          ...distribuirPuntajeEnItems(d9, [47, 48, 49, 50, 51, 52]),
+          ...distribuirPuntajeEnItems(d10, [53, 54, 55, 56])
+        };
+
+        const puntajesG3 = Array(72).fill(0).map((_, idx) => mapaItems[idx + 1] || 0);
+
+        // Guía I: 13 detectados (9 en Operación [2 requieren], 4 en Mantenimiento [3 requieren])
+        const respuestasG1 = Array(20).fill("NO");
+        if (esOp && i < 9) {
+          respuestasG1[0] = "SI";
+          if (i < 2) { respuestasG1[6] = "SI"; respuestasG1[15] = "SI"; respuestasG1[16] = "SI"; }
+        } else if (!esOp && (i - 31) < 4) {
+          respuestasG1[0] = "SI";
+          if ((i - 31) < 3) { respuestasG1[6] = "SI"; respuestasG1[15] = "SI"; respuestasG1[16] = "SI"; }
+        }
+
+        BASE_TRABAJADORES.push(evaluarTrabajador({
+          ficha: String(497200 + i + 1),
+          sexo,
+          edad: i % 2 === 0 ? "ENTRE 50 Y 59 AÑOS" : "ENTRE 40 Y 49 AÑOS",
+          regimen,
+          area,
+          rol,
+          puesto,
+          respuestasG1,
+          puntajesG3
+        }));
+      }
+
+      actualizarDashboard();
+      renderizarSabana();
+
+      if (mostrarAviso) {
+        cambiarTab("tab-dashboard");
+        const card = document.getElementById("card-tabla-principal");
+        const kpis = document.getElementById("grid-kpis");
+        if (card) {
+          card.classList.remove("animar-carga");
+          void card.offsetWidth;
+          card.classList.add("animar-carga");
+        }
+        if (kpis) {
+          kpis.classList.remove("animar-carga");
+          void kpis.offsetWidth;
+          kpis.classList.add("animar-carga");
+        }
+        mostrarToast("Se cargaron los 50 cuestionarios del Pozo KREM 1 EXP Equipo PM-329 (31 Operación y 19 Mantenimiento).");
+      }
+    }
+
+    // =========================================================================
+    // 3. RENDERIZADO DE DASHBOARD Y TABLAS DEL INFORME
+    // =========================================================================
+    function actualizarDashboard() {
+      const areaFiltro = document.getElementById("filtro-area").value;
+      const rolFiltro = document.getElementById("filtro-rol").value;
+      const plantillaTotal = Number(document.getElementById("input-plantilla-total").value) || 56;
+
+      const badgeConteo = document.getElementById("badge-conteo-sabana");
+      if (badgeConteo) badgeConteo.textContent = BASE_TRABAJADORES.length;
+
+      // Ecuación 1 de la NOM-035-STPS-2018 para tamaño de muestra
+      const muestraRequerida = Math.ceil((0.9604 * plantillaTotal) / (0.0025 * (plantillaTotal - 1) + 0.9604));
+
+      const filtrados = BASE_TRABAJADORES.filter(t => {
+        const okArea = areaFiltro === "TODAS" || t.area === areaFiltro;
+        const okRol = rolFiltro === "TODOS" || t.rol === rolFiltro;
+        return okArea && okRol;
+      });
+
+      const n = filtrados.length;
+      const pctCumplimiento = plantillaTotal > 0 ? ((n / plantillaTotal) * 100).toFixed(2) : "0.00";
+      document.getElementById("kpi-muestra").textContent = `${n} (${pctCumplimiento}%)`;
+      document.getElementById("kpi-cumplimiento").textContent = `Muestra req. NOM-035 (Ec. 1): ${muestraRequerida}`;
+
+      const prom = (fn) => n === 0 ? 0 : Math.round(filtrados.reduce((acc, x) => acc + fn(x), 0) / n);
+
+      const promFinal = prom(x => x.cfinal);
+      const nivelFinal = clasificarRiesgo(promFinal, RANGOS.final);
+      document.getElementById("kpi-cfinal-pts").textContent = promFinal;
+      const badgeFinal = document.getElementById("kpi-cfinal-badge");
+      badgeFinal.textContent = nivelFinal;
+      badgeFinal.className = `px-2.5 py-0.5 rounded-full text-xs ${claseColorRiesgo(nivelFinal)}`;
+
+      const casosAltoMuyAlto = filtrados.filter(x => x.cfinalNivel === "Alto" || x.cfinalNivel === "Muy alto").length;
+      document.getElementById("kpi-frps-alto").textContent = casosAltoMuyAlto;
+      document.getElementById("kpi-frps-pct").textContent = `${n > 0 ? ((casosAltoMuyAlto / n) * 100).toFixed(1) : 0}% de los evaluados`;
+
+      const casosViolencia = filtrados.filter(x => x.domNivel.dom8 === "Alto" || x.domNivel.dom8 === "Muy alto").length;
+      document.getElementById("kpi-violencia").textContent = casosViolencia;
+
+      const atsDetectados = filtrados.filter(x => x.atsDetectado).length;
+      const atsRequieren = filtrados.filter(x => x.atsRequiere).length;
+      document.getElementById("kpi-ats-envio").textContent = `${atsRequieren} requieren envío`;
+      document.getElementById("kpi-ats-detectados").textContent = `De ${atsDetectados} eventos traumáticos detectados`;
+
+      const estructura = [
+        {
+          catKey: "cat1", catNombre: "AMBIENTE DE TRABAJO", catRango: RANGOS.cat1,
+          dominios: [
+            { domKey: "dom1", domNombre: "Condiciones en el ambiente de trabajo", domRango: RANGOS.dom1 }
+          ]
+        },
+        {
+          catKey: "cat2", catNombre: "FACTORES PROPIOS DE LA ACTIVIDAD", catRango: RANGOS.cat2,
+          dominios: [
+            { domKey: "dom2", domNombre: "Carga de trabajo", domRango: RANGOS.dom2 },
+            { domKey: "dom3", domNombre: "Falta de control sobre el trabajo", domRango: RANGOS.dom3 }
+          ]
+        },
+        {
+          catKey: "cat3", catNombre: "ORGANIZACIÓN DEL TIEMPO DE TRABAJO", catRango: RANGOS.cat3,
+          dominios: [
+            { domKey: "dom4", domNombre: "Jornada de trabajo", domRango: RANGOS.dom4 },
+            { domKey: "dom5", domNombre: "Interferencia en la relación trabajo-familia", domRango: RANGOS.dom5 }
+          ]
+        },
+        {
+          catKey: "cat4", catNombre: "LIDERAZGO Y RELACIONES EN EL TRABAJO", catRango: RANGOS.cat4,
+          dominios: [
+            { domKey: "dom6", domNombre: "Liderazgo", domRango: RANGOS.dom6 },
+            { domKey: "dom7", domNombre: "Relaciones en el trabajo", domRango: RANGOS.dom7 },
+            { domKey: "dom8", domNombre: "Violencia laboral", domRango: RANGOS.dom8 }
+          ]
+        },
+        {
+          catKey: "cat5", catNombre: "ENTORNO ORGANIZACIONAL", catRango: RANGOS.cat5,
+          dominios: [
+            { domKey: "dom9", domNombre: "Reconocimiento del desempeño", domRango: RANGOS.dom9 },
+            { domKey: "dom10", domNombre: "Insuficiente sentido de pertenencia e inestabilidad", domRango: RANGOS.dom10 }
+          ]
+        }
+      ];
+
+      const tbody = document.getElementById("tabla-categorias-dominios");
+      tbody.innerHTML = "";
+
+      estructura.forEach(grupo => {
+        // En el informe técnico de PEMEX, la calificación de la categoría del Centro de Trabajo es la suma de los promedios de sus dominios
+        const promCat = grupo.dominios.reduce((acc, d) => acc + prom(x => x.dom[d.domKey]), 0);
+        const nivCat = clasificarRiesgo(promCat, grupo.catRango);
+        const span = grupo.dominios.length;
+
+        grupo.dominios.forEach((d, idx) => {
+          const promDom = prom(x => x.dom[d.domKey]);
+          const nivDom = clasificarRiesgo(promDom, d.domRango);
+
+          const cMuyAlto = filtrados.filter(x => x.domNivel[d.domKey] === "Muy alto").length;
+          const cAlto = filtrados.filter(x => x.domNivel[d.domKey] === "Alto").length;
+          const cMedio = filtrados.filter(x => x.domNivel[d.domKey] === "Medio").length;
+          const cBajo = filtrados.filter(x => x.domNivel[d.domKey] === "Bajo").length;
+          const cNulo = filtrados.filter(x => x.domNivel[d.domKey] === "Nulo").length;
+
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50";
+
+          let celdasCat = "";
+          if (idx === 0) {
+            celdasCat = `
+              <td rowspan="${span}" class="py-2.5 px-3 font-bold text-slate-800 border-r border-slate-200 bg-slate-50/60">${grupo.catNombre}</td>
+              <td rowspan="${span}" class="py-2.5 px-3 font-bold text-center text-sm border-r border-slate-200">${promCat}</td>
+              <td rowspan="${span}" class="py-2.5 px-3 text-center border-r border-slate-200">
+                <span class="px-2.5 py-1 rounded text-xs inline-block w-20 ${claseColorRiesgo(nivCat)}">${nivCat}</span>
+              </td>
+            `;
+          }
+
+          tr.innerHTML = `
+            ${celdasCat}
+            <td class="py-2.5 px-3 font-medium text-slate-700 border-r border-slate-200">${d.domNombre}</td>
+            <td class="py-2.5 px-3 font-bold text-center text-sm border-r border-slate-200">${promDom}</td>
+            <td class="py-2.5 px-3 text-center border-r border-slate-200">
+              <span class="px-2.5 py-1 rounded text-xs inline-block w-20 ${claseColorRiesgo(nivDom)}">${nivDom}</span>
+            </td>
+            <td class="py-2.5 px-3 text-center font-semibold text-red-700">${cMuyAlto}</td>
+            <td class="py-2.5 px-3 text-center font-semibold text-orange-700">${cAlto}</td>
+            <td class="py-2.5 px-3 text-center font-semibold text-yellow-700">${cMedio}</td>
+            <td class="py-2.5 px-3 text-center font-semibold text-emerald-700">${cBajo}</td>
+            <td class="py-2.5 px-3 text-center font-semibold text-sky-700">${cNulo}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
+      // Tabla de conteo por Categorías + Fila Global FRPS
+      const tbodyCat = document.getElementById("tabla-conteo-categorias");
+      tbodyCat.innerHTML = "";
+      estructura.forEach(g => {
+        const cMA = filtrados.filter(x => x.catNivel[g.catKey] === "Muy alto").length;
+        const cA = filtrados.filter(x => x.catNivel[g.catKey] === "Alto").length;
+        const cM = filtrados.filter(x => x.catNivel[g.catKey] === "Medio").length;
+        const cB = filtrados.filter(x => x.catNivel[g.catKey] === "Bajo").length;
+        const cN = filtrados.filter(x => x.catNivel[g.catKey] === "Nulo").length;
+
+        tbodyCat.innerHTML += `
+          <tr>
+            <td class="p-2 font-medium text-slate-700">${g.catNombre}</td>
+            <td class="p-2 text-center font-bold text-red-700">${cMA}</td>
+            <td class="p-2 text-center font-bold text-orange-700">${cA}</td>
+            <td class="p-2 text-center font-bold text-yellow-700">${cM}</td>
+            <td class="p-2 text-center font-bold text-emerald-700">${cB}</td>
+            <td class="p-2 text-center font-bold text-sky-700">${cN}</td>
+          </tr>
+        `;
+      });
+
+      // Fila resumen FRPS Final
+      const fMA = filtrados.filter(x => x.cfinalNivel === "Muy alto").length;
+      const fA = filtrados.filter(x => x.cfinalNivel === "Alto").length;
+      const fM = filtrados.filter(x => x.cfinalNivel === "Medio").length;
+      const fB = filtrados.filter(x => x.cfinalNivel === "Bajo").length;
+      const fN = filtrados.filter(x => x.cfinalNivel === "Nulo").length;
+      tbodyCat.innerHTML += `
+        <tr class="bg-slate-100 border-t-2 border-slate-300">
+          <td class="p-2 font-bold text-slate-900">CALIFICACIÓN FINAL (FRPS)</td>
+          <td class="p-2 text-center font-bold text-red-700">${fMA}</td>
+          <td class="p-2 text-center font-bold text-orange-700">${fA}</td>
+          <td class="p-2 text-center font-bold text-yellow-700">${fM}</td>
+          <td class="p-2 text-center font-bold text-emerald-700">${fB}</td>
+          <td class="p-2 text-center font-bold text-sky-700">${fN}</td>
+        </tr>
+      `;
+
+      // Tabla Resumen Guía I (ATS)
+      const tbodyAts = document.getElementById("tabla-resumen-ats");
+      const gruposAts = [
+        { titulo: "Total Centro de Trabajo", items: BASE_TRABAJADORES },
+        { titulo: "Área: OPERACIÓN", items: BASE_TRABAJADORES.filter(x => x.area === "OPERACIÓN") },
+        { titulo: "Área: MANTENIMIENTO", items: BASE_TRABAJADORES.filter(x => x.area === "MANTENIMIENTO") }
+      ];
+      tbodyAts.innerHTML = gruposAts.map(g => {
+        const det = g.items.filter(x => x.atsDetectado).length;
+        const req = g.items.filter(x => x.atsRequiere).length;
+        const noReq = det - req;
+        return `
+          <tr>
+            <td class="p-2 font-semibold text-slate-700">${g.titulo}</td>
+            <td class="p-2 text-center">${g.items.length}</td>
+            <td class="p-2 text-center font-semibold">${det}</td>
+            <td class="p-2 text-center font-bold text-red-700 bg-red-50">${req}</td>
+            <td class="p-2 text-center font-bold text-emerald-700 bg-emerald-50">${noReq}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // =========================================================================
+    // 4. RENDERIZADO DE LA SÁBANA CALIFICADA
+    // =========================================================================
+    function renderizarSabana() {
+      const tbody = document.getElementById("tbody-sabana");
+      tbody.innerHTML = BASE_TRABAJADORES.map((t, idx) => `
+        <tr class="hover:bg-slate-100">
+          <td class="p-2 border-r border-slate-200 font-mono text-slate-500">${idx + 1}</td>
+          <td class="p-2 border-r border-slate-200 font-bold">${t.ficha}</td>
+          <td class="p-2 border-r border-slate-200">${t.puesto}</td>
+          <td class="p-2 border-r border-slate-200 font-semibold">${t.area}</td>
+          <td class="p-2 border-r border-slate-200">${t.rol}</td>
+          <td class="p-2 border-r border-slate-200">${t.sexo}</td>
+          <td class="p-2 border-r border-slate-200 text-center font-bold ${t.atsRequiere ? 'bg-red-600 text-white' : (t.atsDetectado ? 'bg-amber-100 text-amber-900' : 'text-slate-500')}">
+            ${t.atsRequiere ? 'REQUIERE ENVÍO' : (t.atsDetectado ? 'SIN AFECTACIÓN' : 'SIN EVENTO')}
+          </td>
+          <td class="p-2 border-r border-slate-200 text-center font-bold text-sm">${t.cfinal}</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.cfinalNivel)}">${t.cfinalNivel}</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.catNivel.cat1)}">${t.cat.cat1} (${t.catNivel.cat1})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.catNivel.cat2)}">${t.cat.cat2} (${t.catNivel.cat2})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.catNivel.cat3)}">${t.cat.cat3} (${t.catNivel.cat3})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.catNivel.cat4)}">${t.cat.cat4} (${t.catNivel.cat4})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.catNivel.cat5)}">${t.cat.cat5} (${t.catNivel.cat5})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom1)}">${t.dom.dom1} (${t.domNivel.dom1})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom2)}">${t.dom.dom2} (${t.domNivel.dom2})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom3)}">${t.dom.dom3} (${t.domNivel.dom3})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom4)}">${t.dom.dom4} (${t.domNivel.dom4})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom5)}">${t.dom.dom5} (${t.domNivel.dom5})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom6)}">${t.dom.dom6} (${t.domNivel.dom6})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom7)}">${t.dom.dom7} (${t.domNivel.dom7})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom8)}">${t.dom.dom8} (${t.domNivel.dom8})</td>
+          <td class="p-2 border-r border-slate-200 text-center ${claseColorRiesgo(t.domNivel.dom9)}">${t.dom.dom9} (${t.domNivel.dom9})</td>
+          <td class="p-2 text-center ${claseColorRiesgo(t.domNivel.dom10)}">${t.dom.dom10} (${t.domNivel.dom10})</td>
+        </tr>
+      `).join("");
+    }
+
+    // =========================================================================
+    // 5. CONSTRUCCIÓN DEL FORMULARIO DE CAPTURA INDIVIDUAL
+    // =========================================================================
+    function inicializarFormularioCaptura() {
+      const contG1 = document.getElementById("contenedor-preguntas-guia1");
+      contG1.innerHTML = PREGUNTAS_GUIA_1.map((q, i) => `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-1.5 border-b border-slate-200 last:border-0">
+          <div class="text-xs text-slate-700">
+            <span class="font-bold text-[#691C32]">[${q.seccion}] ${q.num}.</span> ${q.texto}
+          </div>
+          <select id="g1-q-${i}" class="text-xs border border-slate-300 rounded px-2.5 py-1 bg-white font-semibold w-24 shrink-0">
+            <option value="NO">NO</option>
+            <option value="SI">SÍ</option>
+          </select>
+        </div>
+      `).join("");
+
+      const contG3 = document.getElementById("contenedor-preguntas-guia3");
+      contG3.innerHTML = PREGUNTAS_GUIA_3.map((texto, i) => {
+        const num = i + 1;
+        const esCondicionalCliente = num >= 65 && num <= 68;
+        const esCondicionalJefe = num >= 69 && num <= 72;
+        const claseOculta = (esCondicionalCliente || esCondicionalJefe) ? "hidden" : "";
+        return `
+          <div id="fila-g3-${num}" class="${claseOculta} flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+            <span class="text-xs font-medium text-slate-700">${texto}</span>
+            <select id="g3-q-${num}" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold shrink-0">
+              <option value="Siempre">Siempre</option>
+              <option value="Casi siempre">Casi siempre</option>
+              <option value="Algunas veces" selected>Algunas veces</option>
+              <option value="Casi nunca">Casi nunca</option>
+              <option value="Nunca">Nunca</option>
+            </select>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function toggleCondicionales() {
+      const clientes = document.getElementById("cap-clientes").value === "SI";
+      const jefe = document.getElementById("cap-jefe").value === "SI";
+      for (let n = 65; n <= 68; n++) {
+        document.getElementById(`fila-g3-${n}`).classList.toggle("hidden", !clientes);
+      }
+      for (let n = 69; n <= 72; n++) {
+        document.getElementById(`fila-g3-${n}`).classList.toggle("hidden", !jefe);
+      }
+    }
+
+    function autollenarFormularioDemo() {
+      document.getElementById("cap-ficha").value = String(Math.floor(400000 + Math.random() * 99999));
+      const opciones = ["Siempre", "Casi siempre", "Algunas veces", "Casi nunca", "Nunca"];
+      for (let n = 1; n <= 72; n++) {
+        const sel = document.getElementById(`g3-q-${n}`);
+        if (sel) sel.value = opciones[Math.floor(Math.random() * opciones.length)];
+      }
+      mostrarToast("Formulario autollenado con respuestas de prueba.");
+    }
+
+    function guardarCuestionarioIndividual(e) {
+      e.preventDefault();
+      const respuestasG1 = [];
+      for (let i = 0; i < 20; i++) {
+        respuestasG1.push(document.getElementById(`g1-q-${i}`).value);
+      }
+
+      const brindaClientes = document.getElementById("cap-clientes").value === "SI";
+      const esJefe = document.getElementById("cap-jefe").value === "SI";
+      const puntajesG3 = [];
+
+      for (let n = 1; n <= 72; n++) {
+        if (n >= 65 && n <= 68 && !brindaClientes) {
+          puntajesG3.push(0);
+        } else if (n >= 69 && n <= 72 && !esJefe) {
+          puntajesG3.push(0);
+        } else {
+          const resp = document.getElementById(`g3-q-${n}`).value;
+          puntajesG3.push(calificarItemGuia3(n, resp));
+        }
+      }
+
+      const nuevo = evaluarTrabajador({
+        ficha: document.getElementById("cap-ficha").value.trim(),
+        sexo: document.getElementById("cap-sexo").value,
+        edad: document.getElementById("cap-edad").value,
+        regimen: document.getElementById("cap-regimen").value,
+        area: document.getElementById("cap-area").value,
+        rol: document.getElementById("cap-rol").value,
+        puesto: document.getElementById("cap-puesto").value,
+        respuestasG1,
+        puntajesG3
+      });
+
+      BASE_TRABAJADORES.push(nuevo);
+      actualizarDashboard();
+      renderizarSabana();
+      cambiarTab("tab-sabana");
+      mostrarToast(`Trabajador con ficha ${nuevo.ficha} calificado y agregado a la base.`);
+    }
+
+    // =========================================================================
+    // 6. VACIADO MASIVO DESDE EXCEL / FORMS Y EXPORTACIÓN A EXCEL (.CSV)
+    // =========================================================================
+    function generarEjemploPegado() {
+      const respuestas72 = Array(72).fill("Algunas veces").join("\t");
+      const respuestas20 = ["SI", ...Array(19).fill("NO")].join("\t");
+      const filas = [
+        `501001\tMASCULINO\tENTRE 40 Y 49 AÑOS\tPLANTA SINDICALIZADO\tOPERACIÓN\tDJ 1\tPERFORADOR\t${respuestas20}\t${respuestas72}`,
+        `501002\tMASCULINO\tENTRE 50 Y 59 AÑOS\tPLANTA SINDICALIZADO\tMANTENIMIENTO\tDJ 2\tENCARGADO ELÉCTRICO\t${Array(20).fill("NO").join("\t")}\t${Array(72).fill("Casi nunca").join("\t")}`,
+        `501003\tFEMENINO\tENTRE 50 Y 59 AÑOS\tPLANTA SINDICALIZADO\tMANTENIMIENTO\tDJ 1\tAYUDANTE ELÉCTRICO\t${respuestas20}\t${Array(72).fill("Casi siempre").join("\t")}`
+      ];
+      document.getElementById("textarea-importar").value = filas.join("\n");
+      mostrarToast("Se insertaron 3 filas de ejemplo listas para procesar.");
+    }
+
+    function procesarVaciadoMasivo() {
+      const texto = document.getElementById("textarea-importar").value.trim();
+      if (!texto) {
+        mostrarToast("Pegue al menos una fila desde Excel antes de procesar.");
+        return;
+      }
+      const lineas = texto.split(/\r?\n/);
+      let agregados = 0;
+
+      lineas.forEach((linea, idx) => {
+        const cols = linea.includes("\t") ? linea.split("\t") : linea.split(",");
+        if (cols.length < 10) return;
+
+        const ficha = cols[0] || `TRAB-${idx + 1}`;
+        const sexo = (cols[1] || "MASCULINO").toUpperCase();
+        const edad = cols[2] || "ENTRE 40 Y 49 AÑOS";
+        const regimen = cols[3] || "PLANTA SINDICALIZADO";
+        const area = (cols[4] || "OPERACIÓN").toUpperCase();
+        const rol = (cols[5] || "DJ 1").toUpperCase();
+        const puesto = cols[6] || "OPERATIVO";
+
+        const respuestasG1 = [];
+        for (let i = 0; i < 20; i++) {
+          respuestasG1.push(cols[7 + i] || "NO");
+        }
+
+        const puntajesG3 = [];
+        for (let n = 1; n <= 72; n++) {
+          const valorCrudo = cols[27 + (n - 1)];
+          puntajesG3.push(calificarItemGuia3(n, valorCrudo));
+        }
+
+        BASE_TRABAJADORES.push(evaluarTrabajador({
+          ficha, sexo, edad, regimen, area, rol, puesto, respuestasG1, puntajesG3
+        }));
+        agregados++;
+      });
+
+      document.getElementById("textarea-importar").value = "";
+      actualizarDashboard();
+      renderizarSabana();
+      cambiarTab("tab-dashboard");
+      mostrarToast(`Se procesaron y calificaron ${agregados} registros correctamente.`);
+    }
+
+    function exportarExcelCSV() {
+      if (BASE_TRABAJADORES.length === 0) {
+        mostrarToast("No hay trabajadores en la base para exportar.");
+        return;
+      }
+
+      const encabezados = [
+        "No", "Ficha", "Sexo", "Rango_Edad", "Regimen_Contractual", "Area", "Rol", "Categoria_Puesto",
+        "Guia_I_Evento_Detectado", "Guia_I_Dictamen_Clinico",
+        "Calificacion_Final", "Nivel_Riesgo_Final",
+        "Cat1_Ambiente_Pts", "Cat1_Nivel",
+        "Cat2_Actividad_Pts", "Cat2_Nivel",
+        "Cat3_Tiempo_Pts", "Cat3_Nivel",
+        "Cat4_LiderazgoRel_Pts", "Cat4_Nivel",
+        "Cat5_Entorno_Pts", "Cat5_Nivel",
+        "Dom1_Condiciones_Pts", "Dom1_Nivel",
+        "Dom2_Carga_Pts", "Dom2_Nivel",
+        "Dom3_FaltaControl_Pts", "Dom3_Nivel",
+        "Dom4_Jornada_Pts", "Dom4_Nivel",
+        "Dom5_TrabajoFamilia_Pts", "Dom5_Nivel",
+        "Dom6_Liderazgo_Pts", "Dom6_Nivel",
+        "Dom7_Relaciones_Pts", "Dom7_Nivel",
+        "Dom8_Violencia_Pts", "Dom8_Nivel",
+        "Dom9_Reconocimiento_Pts", "Dom9_Nivel",
+        "Dom10_Pertenencia_Pts", "Dom10_Nivel",
+        ...Array.from({ length: 72 }, (_, i) => `Item_${i + 1}_Pts`)
+      ];
+
+      const filasCSV = [encabezados.join(",")];
+
+      BASE_TRABAJADORES.forEach((t, i) => {
+        const fila = [
+          i + 1,
+          `"${t.ficha}"`,
+          `"${t.sexo}"`,
+          `"${t.edad}"`,
+          `"${t.regimen}"`,
+          `"${t.area}"`,
+          `"${t.rol}"`,
+          `"${t.puesto}"`,
+          t.atsDetectado ? "SI" : "NO",
+          t.atsRequiere ? "REQUIERE VALORACION CLINICA" : "NO REQUIERE",
+          t.cfinal, t.cfinalNivel,
+          t.cat.cat1, t.catNivel.cat1,
+          t.cat.cat2, t.catNivel.cat2,
+          t.cat.cat3, t.catNivel.cat3,
+          t.cat.cat4, t.catNivel.cat4,
+          t.cat.cat5, t.catNivel.cat5,
+          t.dom.dom1, t.domNivel.dom1,
+          t.dom.dom2, t.domNivel.dom2,
+          t.dom.dom3, t.domNivel.dom3,
+          t.dom.dom4, t.domNivel.dom4,
+          t.dom.dom5, t.domNivel.dom5,
+          t.dom.dom6, t.domNivel.dom6,
+          t.dom.dom7, t.domNivel.dom7,
+          t.dom.dom8, t.domNivel.dom8,
+          t.dom.dom9, t.domNivel.dom9,
+          t.dom.dom10, t.domNivel.dom10,
+          ...t.puntajesG3
+        ];
+        filasCSV.push(fila.join(","));
+      });
+
+      const contenido = "\uFEFF" + filasCSV.join("\n");
+      const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Base_Calificada_NOM035_Pozo_KREM_1.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      mostrarToast("Archivo CSV para Excel descargado correctamente.");
+    }
+
+    function limpiarBaseDatos() {
+      BASE_TRABAJADORES = [];
+      actualizarDashboard();
+      renderizarSabana();
+      mostrarToast("Se vació la base de datos. Puede presionar 'Cargar Datos Demo' para restaurarla.");
+    }
+
+    function cambiarTab(tabId) {
+      ["tab-dashboard", "tab-sabana", "tab-captura", "tab-importar"].forEach(id => {
+        document.getElementById(id).classList.toggle("hidden", id !== tabId);
+        const btn = document.getElementById(`btn-${id}`);
+        if (id === tabId) {
+          btn.className = "tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-[#691C32] text-[#691C32] whitespace-nowrap";
+        } else {
+          btn.className = "tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 whitespace-nowrap";
+        }
+      });
+    }
+
+
+    // Acceso de demostración: sólo cambia la pantalla visible.
+    // No es una autenticación real; no almacena usuarios ni protege los datos.
+    function iniciarSesionDemo(event) {
+      event.preventDefault();
+      const usuario = document.getElementById("login-usuario").value.trim();
+      const contrasena = document.getElementById("login-contrasena").value;
+      const mensaje = document.getElementById("login-error");
+      if (usuario === "demo" && contrasena === "demo") {
+        mensaje.classList.remove("visible");
+        document.getElementById("login-contrasena").value = "";
+        const login = document.getElementById("pantalla-login");
+        const app = document.getElementById("app-principal");
+        login.classList.add("login-oculto");
+        login.setAttribute("aria-hidden", "true");
+        app.classList.remove("app-oculta");
+        app.removeAttribute("aria-hidden");
+        window.scrollTo(0, 0);
+      } else {
+        mensaje.classList.add("visible");
+        document.getElementById("login-contrasena").value = "";
+        document.getElementById("login-contrasena").focus();
+      }
+    }
+
+    function cerrarSesionDemo() {
+      const login = document.getElementById("pantalla-login");
+      const app = document.getElementById("app-principal");
+      app.classList.add("app-oculta");
+      app.setAttribute("aria-hidden", "true");
+      login.classList.remove("login-oculto");
+      login.removeAttribute("aria-hidden");
+      document.getElementById("form-login").reset();
+      document.getElementById("login-error").classList.remove("visible");
+      document.getElementById("login-usuario").focus();
+      window.scrollTo(0, 0);
+    }
+
+    // Exponer funciones al ámbito global explícitamente
+    window.cerrarSesionDemo = cerrarSesionDemo;
+    window.cargarDemoKrem = cargarDemoKrem;
+    window.exportarExcelCSV = exportarExcelCSV;
+    window.cambiarTab = cambiarTab;
+    window.actualizarDashboard = actualizarDashboard;
+    window.limpiarBaseDatos = limpiarBaseDatos;
+    window.autollenarFormularioDemo = autollenarFormularioDemo;
+    window.guardarCuestionarioIndividual = guardarCuestionarioIndividual;
+    window.toggleCondicionales = toggleCondicionales;
+    window.generarEjemploPegado = generarEjemploPegado;
+    window.procesarVaciadoMasivo = procesarVaciadoMasivo;
+
+    // Inicializar al abrir
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("form-login").addEventListener("submit", iniciarSesionDemo);
+      inicializarFormularioCaptura();
+      cargarDemoKrem(false);
+    });
+  </script>
+</body>
+</html>
