@@ -15,28 +15,13 @@
   <link rel="stylesheet" href="assets/css/styles.css">
   <script src="assets/js/site.js" defer></script>
     <style>
-      .scveap-price { margin-top: 2px; padding: 13px 15px; width: 100%; border: 1px solid rgba(22,224,232,.20); border-radius: 12px; background: rgba(22,224,232,.06); color: #e4f6ff !important; }
-      .scveap-price small { display: block; margin-top: 3px; color: var(--muted); font-size: .76rem; }
-      .scveap-plans { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; margin-top: 28px; }
-      .scveap-plan { padding: 28px; }
-      .scveap-plan-annual { border-color: var(--line-strong); background: linear-gradient(145deg,rgba(14,48,76,.85),rgba(7,17,36,.9)); }
-      .scveap-plan-kicker { display: inline-block; margin-bottom: 13px; color: var(--cyan-soft); font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
-      .scveap-plan h3 { margin-bottom: 14px; }
-      .scveap-plan-amount { margin-bottom: 12px; font-size: clamp(1.9rem,3vw,2.6rem); line-height: 1.2; letter-spacing: -.04em; font-weight: 850; color: #fff; }
-      .scveap-plan-amount span { display: inline-block; margin-left: 4px; font-size: 1rem; letter-spacing: 0; font-weight: 500; color: var(--muted); }
-      .scveap-plan p:last-child { margin-bottom: 0; color: var(--muted); }
-      .scveap-terms { margin: 14px 0 0; font-size: .87rem; color: var(--muted); }
       .scveap-gallery { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 19px; }
       .scveap-shot { margin: 0; }
       .scveap-shot img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; object-position: top; background: #0b172e; }
       .scveap-shot figcaption { padding: 17px 20px; font-weight: 800; }
       .scveap-shot figcaption span { display: block; margin-top: 3px; font-size: .83rem; font-weight: 500; color: var(--muted); }
-      .scveap-cta { margin-top: 24px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; gap: 22px; border: 1px solid var(--line-strong); border-radius: var(--radius-md); background: rgba(11,23,46,.78); }
-      .scveap-cta h3 { margin-bottom: 8px; }
-      .scveap-cta p { margin-bottom: 0; color: var(--muted); }
-      .scveap-cta .button { flex-shrink: 0; }
-      @media(max-width: 900px){ .scveap-gallery { grid-template-columns: repeat(2,minmax(0,1fr)); } .scveap-cta { align-items:flex-start; flex-direction:column; } }
-      @media(max-width: 580px){ .scveap-gallery, .scveap-plans { grid-template-columns: 1fr; } .scveap-cta { padding:20px; } .scveap-plan { padding:22px; } }
+      @media(max-width: 900px){ .scveap-gallery { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+      @media(max-width: 580px){ .scveap-gallery { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -141,13 +126,13 @@
           <div>
             <p class="eyebrow">Próximamente</p>
             <h2 id="development-title">En desarrollo.</h2>
-            <p>Conoce SCVEAP, una aplicación web en fase de pruebas. Las siguientes imágenes son vistas ilustrativas basadas en la interfaz de demostración, no capturas de datos reales.</p>
+            <p>SCVEAP es un proyecto de aplicación web para la captura y el análisis de cuestionarios NOM-035. La demostración pública se encuentra fuera de línea. Estas imágenes son representaciones ilustrativas del prototipo, no registros reales.</p>
           </div>
         </div>
         <div class="scveap-gallery">
           <figure class="card scveap-shot">
             <img src="assets/projects/scveap/vista-login.svg" alt="Vista ilustrativa de inicio de sesión de SCVEAP" width="1280" height="760" loading="lazy">
-            <figcaption>Inicio de sesión <span>Acceso demostrativo</span></figcaption>
+            <figcaption>Inicio de sesión <span>Diseño del prototipo</span></figcaption>
           </figure>
           <figure class="card scveap-shot">
             <img src="assets/projects/scveap/vista-dashboard.svg" alt="Vista ilustrativa de los indicadores y filtros del análisis NOM-035" width="1280" height="760" loading="lazy">
@@ -157,28 +142,6 @@
             <img src="assets/projects/scveap/vista-cuestionario.svg" alt="Vista ilustrativa del formulario de captura de las guías I, III y V" width="1280" height="760" loading="lazy">
             <figcaption>Captura de cuestionarios <span>Guías I, III y V</span></figcaption>
           </figure>
-        </div>
-        <div class="scveap-plans" aria-label="Precios propuestos de lanzamiento de SCVEAP">
-          <article class="card scveap-plan">
-            <span class="scveap-plan-kicker">Suscripción mensual</span>
-            <h3>Plan profesional</h3>
-            <p class="scveap-plan-amount">$699 <span>MXN / mes</span></p>
-            <p>Pago mensual, más IVA. Tarifa propuesta para la futura versión profesional.</p>
-          </article>
-          <article class="card scveap-plan scveap-plan-annual">
-            <span class="scveap-plan-kicker">Suscripción anual · Ahorra 2 meses</span>
-            <h3>Plan profesional anual</h3>
-            <p class="scveap-plan-amount">$6,990 <span>MXN / año</span></p>
-            <p>Pago anual, más IVA. Equivale a diez mensualidades de $699.</p>
-          </article>
-        </div>
-        <p class="scveap-terms">Precios de lanzamiento propuestos, sujetos a confirmación y a la disponibilidad de la versión comercial. La demostración actual es gratuita y utiliza únicamente datos ficticios; no está habilitada para procesar datos reales de trabajadores.</p>
-        <div class="scveap-cta">
-          <div>
-            <h3>SCVEAP · Sistema de captura y análisis psicosocial</h3>
-            <p>Explora la demostración gratuita. Suscripción comercial prevista desde <strong>$699 MXN/mes + IVA</strong> o <strong>$6,990 MXN/año + IVA</strong>, disponible tras completar la versión segura.</p>
-          </div>
-          <a class="button" href="https://victordejesus.dev/SCVEAP/" target="_blank" rel="noopener noreferrer">Abrir aplicación web <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </section>
